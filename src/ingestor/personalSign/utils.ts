@@ -1,6 +1,6 @@
-import snapshot from '@snapshot-labs/snapshot.js';
+import { domain, getTypes } from '@snapshot-labs/snapshot.js/src/client';
 import * as ethUtil from 'ethereumjs-util';
-import { isValidSignature } from '../../helpers/eip1271';
+import { verifyTypedData } from '@ethersproject/wallet';
 import { convertUtf8ToHex } from '@walletconnect/utils';
 
 export function recoverPublicKey(sig: string, hash: string): string {
@@ -15,25 +15,17 @@ export function recoverPublicKey(sig: string, hash: string): string {
 }
 
 export async function verifySignature(
-  address: string,
+  expectedSignerAddress: string,
   sig: string,
-  hash: string
-  // chainId: number
+  data: any
 ): Promise<boolean> {
-  const provider = snapshot.utils.getProvider('1');
-  const bytecode = await provider.getCode(address);
-  if (
-    !bytecode ||
-    bytecode === '0x' ||
-    bytecode === '0x0' ||
-    bytecode === '0x00'
-  ) {
-    const signer = recoverPublicKey(sig, hash);
-    return signer.toLowerCase() === address.toLowerCase();
-  } else {
-    console.log('Smart contract signature');
-    return isValidSignature(address, sig, hash, provider);
-  }
+  const recoveredAddress = verifyTypedData(
+    domain,
+    getTypes(data.type),
+    data,
+    sig
+  );
+  return recoveredAddress === expectedSignerAddress;
 }
 
 export function encodePersonalMessage(msg: string): string {

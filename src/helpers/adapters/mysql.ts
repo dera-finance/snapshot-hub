@@ -57,7 +57,7 @@ export async function storeProposal(space, body, id, relayerIpfsHash) {
   const spaceSettings = spaces[space];
   const author = getAddress(body.address);
   const created = parseInt(msg.timestamp);
-  const metadata = msg.payload.metadata || {};
+  const metadata: any = JSON.parse(msg.payload.metadata) || {};
   const strategies = JSON.stringify(
     metadata.strategies || spaceSettings.strategies
   );
@@ -147,7 +147,7 @@ export async function storeVote(space, body, id, relayerIpfsHash) {
     space,
     proposal: msg.payload.proposal,
     choice: JSON.stringify(msg.payload.choice),
-    metadata: JSON.stringify(msg.payload.metadata || {})
+    metadata: msg.payload.metadata
   };
 
   await db.queryAsync('INSERT IGNORE INTO votes SET ?', params);
